@@ -1,1 +1,0 @@
-Modifier pyQT5 avec une page web utilisant flask
