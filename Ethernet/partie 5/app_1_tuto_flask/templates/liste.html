@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Liste des voitures</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        .voiture { 
+            padding: 10px; 
+            margin: 10px 0; 
+            background: #f0f0f0; 
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Nos voitures</h1>
+    <a href="/">← Retour à l'accueil</a>
+    
+    <!-- Étape 4 & 5 : Boucle et liens dynamiques -->
+    {% if voitures %}
+        {% for id, voiture in voitures.items() %}
+            <div class="voiture">
+                <strong>{{ voiture.marque }} {{ voiture.modele }}</strong> - 
+                {{ voiture.couleur }} ({{ voiture.annee }})
+                <a href="/voiture/{{ id }}">Voir détails</a>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>Aucune voiture trouvée.</p>
+    {% endif %}
+</body>
+</html>

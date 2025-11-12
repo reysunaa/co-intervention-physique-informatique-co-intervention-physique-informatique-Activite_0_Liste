@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Détail voiture</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        .info { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <!-- Étape 1 & 2 : Afficher des variables simples -->
+    <h1>{{ voiture.marque }} {{ voiture.modele }}</h1>
+    
+    <a href="/voitures">← Retour à la liste</a>
+    
+    <!-- Étape 3 : Utiliser une condition -->
+    {% if voiture %}
+        <div class="info">
+            <strong>Marque:</strong> {{ voiture.marque }}<br>
+            <strong>Modèle:</strong> {{ voiture.modele }}<br>
+            <strong>Année:</strong> {{ voiture.annee }}<br>
+            <strong>Couleur:</strong> {{ voiture.couleur }}
+        </div>
+    {% else %}
+        <p>Aucune voiture trouvée</p>
+    {% endif %}
+</body>
+</html>

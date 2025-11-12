@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Décodeur Ethernet Manchester 10BASE-T</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .upload-section {
+            border: 3px dashed #2a5298;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            background: #f0f4f8;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+        }
+        
+        .upload-section:hover {
+            border-color: #1e3c72;
+            background: #e8f0f8;
+        }
+        
+        .upload-section input[type="file"] {
+            display: none;
+        }
+        
+        .upload-btn {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .upload-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .info-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .info-card h3 {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .info-card .value {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        
+        .frame-section {
+            background: #fff9f0;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 5px solid #ff9800;
+        }
+        
+        .frame-section h2 {
+            color: #ff9800;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .frame-field {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .frame-field .label {
+            font-weight: bold;
+            color: #ff9800;
+        }
+        
+        .frame-field .value {
+            font-family: 'Courier New', monospace;
+            color: #333;
+            word-break: break-all;
+        }
+        
+        .data-section {
+            background: #f0f8ff;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 5px solid #2196f3;
+        }
+        
+        .data-section h2 {
+            color: #2196f3;
+            margin-bottom: 15px;
+        }
+        
+        .data-display {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            word-break: break-all;
+            line-height: 1.6;
+        }
+        
+        .chart-container {
+            margin-top: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        #results {
+            display: none;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #c33;
+            margin: 20px 0;
+        }
+        
+        .success {
+            background: #efe;
+            color: #3c3;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #3c3;
+            margin: 20px 0;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2a5298;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .protocol-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            background: #4caf50;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .mac-address {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        
+        .hex-dump {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔌 Décodeur Ethernet Manchester 10BASE-T</h1>
+            <p>Analysez et décodez vos trames Ethernet capturées à l'oscilloscope</p>
+        </div>
+        
+        <div class="content">
+            <div class="upload-section">
+                <h2>📁 Télécharger fichier CSV Tektronix</h2>
+                <p style="margin: 15px 0;">Signal Manchester encodé à 10 Mbps</p>
+                <input type="file" id="fileInput" accept=".csv">
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                    Choisir un fichier
+                </button>
+                <p id="fileName" style="margin-top: 15px; color: #2a5298; font-weight: bold;"></p>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 10px;">Décodage en cours...</p>
+            </div>
+            
+            <div id="message"></div>
+            
+            <div id="results">
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>Taux d'échantillonnage</h3>
+                        <div class="value" id="sampleRate">-</div>
+                    </div>
+                    <div class="info-card">
+                        <h3>Durée capture</h3>
+                        <div class="value" id="duration">-</div>
+                    </div>
+                    <div class="info-card">
+                        <h3>Bits décodés</h3>
+                        <div class="value" id="bitsDecoded">-</div>
+                    </div>
+                    <div class="info-card">
+                        <h3>Octets décodés</h3>
+                        <div class="value" id="bytesDecoded">-</div>
+                    </div>
+                </div>
+                
+                <div class="frame-section" id="frameSection" style="display:none;">
+                    <h2>📦 Trame Ethernet décodée</h2>
+                    <div id="frameContent"></div>
+                </div>
+                
+                <div class="data-section">
+                    <h2>💾 Données brutes décodées</h2>
+                    <h3 style="margin-top: 15px; margin-bottom: 5px;">Hexadécimal:</h3>
+                    <div class="hex-dump" id="hexData"></div>
+                    <h3 style="margin-top: 15px; margin-bottom: 5px;">Binaire (premiers bits):</h3>
+                    <div class="data-display" id="binaryData"></div>
+                </div>
+                
+                <div class="chart-container">
+                    <h2 style="color: #2a5298; margin-bottom: 15px;">📊 Signal analogique et décodage Manchester</h2>
+                    <div id="plotAnalog"></div>
+                </div>
+                
+                <div class="chart-container">
+                    <h2 style="color: #2a5298; margin-bottom: 15px;">📈 Signal numérique décodé</h2>
+                    <div id="plotDigital"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('fileName').textContent = `Fichier: ${file.name}`;
+                uploadFile(file);
+            }
+        });
+        
+        function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('message').innerHTML = '';
+            document.getElementById('results').style.display = 'none';
+            
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                
+                if (data.error) {
+                    document.getElementById('message').innerHTML = 
+                        `<div class="error">❌ ${data.error}</div>`;
+                } else {
+                    document.getElementById('message').innerHTML = 
+                        `<div class="success">✅ Décodage réussi!</div>`;
+                    displayResults(data);
+                }
+            })
+            .catch(error => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('message').innerHTML = 
+                    `<div class="error">❌ Erreur: ${error.message}</div>`;
+            });
+        }
+        
+        function displayResults(data) {
+            document.getElementById('results').style.display = 'block';
+            
+            // Afficher les infos
+            document.getElementById('sampleRate').textContent = data.signal_info.sample_rate;
+            document.getElementById('duration').textContent = data.signal_info.duration;
+            document.getElementById('bitsDecoded').textContent = data.signal_info.bits_decoded;
+            document.getElementById('bytesDecoded').textContent = data.signal_info.bytes_decoded;
+            
+            // Afficher les données décodées
+            document.getElementById('hexData').textContent = data.decoded_data.hex;
+            document.getElementById('binaryData').textContent = data.decoded_data.binary;
+            
+            // Afficher la trame Ethernet si décodée
+            if (data.ethernet_frame) {
+                const frame = data.ethernet_frame;
+                document.getElementById('frameSection').style.display = 'block';
+                
+                let frameHTML = '';
+                
+                if (frame.preamble_end !== undefined) {
+                    frameHTML += `
+                        <div class="frame-field">
+                            <div class="label">Préambule/SFD:</div>
+                            <div class="value">Détecté à l'octet ${frame.preamble_end}</div>
+                        </div>
+                    `;
+                }
+                
+                frameHTML += `
+                    <div class="frame-field">
+                        <div class="label">MAC Destination:</div>
+                        <div class="value mac-address">${frame.dest_mac}</div>
+                    </div>
+                    <div class="frame-field">
+                        <div class="label">MAC Source:</div>
+                        <div class="value mac-address">${frame.src_mac}</div>
+                    </div>
+                    <div class="frame-field">
+                        <div class="label">EtherType:</div>
+                        <div class="value">
+                            ${frame.ethertype_hex}
+                            <span class="protocol-badge">${frame.protocol}</span>
+                        </div>
+                    </div>
+                `;
+                
+                if (frame.payload_length !== undefined) {
+                    frameHTML += `
+                        <div class="frame-field">
+                            <div class="label">Longueur payload:</div>
+                            <div class="value">${frame.payload_length} octets</div>
+                        </div>
+                        <div class="frame-field">
+                            <div class="label">Payload (début):</div>
+                            <div class="value">${frame.payload}</div>
+                        </div>
+                    `;
+                }
+                
+                if (frame.fcs) {
+                    frameHTML += `
+                        <div class="frame-field">
+                            <div class="label">FCS (CRC):</div>
+                            <div class="value">${frame.fcs}</div>
+                        </div>
+                    `;
+                }
+                
+                frameHTML += `
+                    <div class="frame-field">
+                        <div class="label">Taille totale:</div>
+                        <div class="value">${frame.total_length} octets</div>
+                    </div>
+                `;
+                
+                document.getElementById('frameContent').innerHTML = frameHTML;
+            }
+            
+            // Graphique signal analogique
+            const traceAnalog = {
+                x: data.plot_data.time,
+                y: data.plot_data.analog,
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#2196f3', width: 1 },
+                name: 'Signal analogique'
+            };
+            
+            const traceBits = {
+                x: data.plot_data.bit_markers.times,
+                y: data.plot_data.bit_markers.values,
+                type: 'scatter',
+                mode: 'markers',
+                marker: { color: '#ff9800', size: 6, symbol: 'circle' },
+                name: 'Bits décodés'
+            };
+            
+            const layoutAnalog = {
+                title: 'Signal analogique capturé',
+                xaxis: { 
+                    title: 'Temps (s)',
+                    gridcolor: '#e0e0e0'
+                },
+                yaxis: { 
+                    title: 'Amplitude (V)',
+                    gridcolor: '#e0e0e0'
+                },
+                plot_bgcolor: '#fafafa',
+                paper_bgcolor: 'white',
+                showlegend: true
+            };
+            
+            Plotly.newPlot('plotAnalog', [traceAnalog, traceBits], layoutAnalog, {responsive: true});
+            
+            // Graphique signal numérique
+            const traceDigital = {
+                x: data.plot_data.time,
+                y: data.plot_data.digital,
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#4caf50', width: 1, shape: 'hv' },
+                name: 'Signal numérique'
+            };
+            
+            const layoutDigital = {
+                title: 'Signal numérique (après seuillage)',
+                xaxis: { 
+                    title: 'Temps (s)',
+                    gridcolor: '#e0e0e0'
+                },
+                yaxis: { 
+                    title: 'Niveau logique',
+                    gridcolor: '#e0e0e0',
+                    tickvals: [0, 1],
+                    ticktext: ['0', '1']
+                },
+                plot_bgcolor: '#fafafa',
+                paper_bgcolor: 'white'
+            };
+            
+            Plotly.newPlot('plotDigital', [traceDigital], layoutDigital, {responsive: true});
+        }
+    </script>
+</body>
+</html>

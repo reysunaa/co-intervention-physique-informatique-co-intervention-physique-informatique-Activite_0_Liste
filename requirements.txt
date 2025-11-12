@@ -1,2 +1,5 @@
-flask
+
 mysql-connector-python
+flask==3.0.0
+pandas==2.1.4
+numpy==1.26.2

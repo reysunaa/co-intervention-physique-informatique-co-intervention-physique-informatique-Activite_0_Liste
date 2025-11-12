@@ -9,9 +9,9 @@
             "name": "Python: Flask",
             "type": "python",
             "request": "launch",
-            "module": "flask",
+            "module" : "flask",
             "env": {
-                "FLASK_APP": "exo1.py",
+                "FLASK_APP": "Ethernet/partie 5/tuto_flask/app.py",
                 "FLASK_ENV": "development",
                 "FLASK_DEBUG": "0"
             },
