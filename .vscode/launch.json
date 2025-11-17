@@ -11,7 +11,7 @@
             "request": "launch",
             "module" : "flask",
             "env": {
-                "FLASK_APP": "Ethernet/partie 5/tuto_flask/app.py",
+                "FLASK_APP": "Ethernet/partie 5/app_1_tuto_flask/app.py",
                 "FLASK_ENV": "development",
                 "FLASK_DEBUG": "0"
             },
