@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Résultat du décodage</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    .container { max-width: 1000px; margin: auto; }
+    pre {
+      background: #f5f5f5;
+      padding: 0.75rem;
+      border-radius: 4px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    a { text-decoration: none; color: #0066cc; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Résultat du décodage</h1>
+
+  <p>
+    <strong>Type d'oscilloscope :</strong> {{ osc_type }}<br>
+    <strong>Fichier :</strong> {{ filename }}<br>
+    <strong>Nombre d'échantillons :</strong> {{ nb_ech }}<br>
+    <strong>Intervalle d'échantillonnage :</strong> {{ intervalle }} s<br>
+    <strong>Échantillons par bit (Manchester) :</strong> {{ ech_par_bit }}
+  </p>
+
+  <h2>Trame binaire (après décodage Manchester)</h2>
+  <pre>{{ trame_binaire }}</pre>
+
+  <h2>Trame binaire sans préambule + SFD</h2>
+  <pre>{{ trame_sans_preambule }}</pre>
+
+  <h2>Trame complète en hexadécimal</h2>
+  <pre>{{ trame_hex_complete }}</pre>
+
+  <h2>Champs Ethernet</h2>
+  <p>
+    <strong>MAC destination :</strong> {{ mac_dest }}<br>
+    <strong>MAC source :</strong> {{ mac_src }}<br>
+    <strong>EtherType (hexa) :</strong> {{ ethertype_hex }}<br>
+    <strong>EtherType (décodé) :</strong> {{ ethertype_name }}
+  </p>
+
+  <h2>Payload (données après EtherType)</h2>
+  {% if payload_hex %}
+    <pre>{{ payload_hex }}</pre>
+  {% else %}
+    <p>(Pas de données supplémentaires détectées)</p>
+  {% endif %}
+
+  <p><a href="{{ url_for('index') }}">⟵ Revenir à l'accueil</a></p>
+</div>
+</body>
+</html>
