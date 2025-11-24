@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulation POO Voiture & Conducteur</title>
+    <!-- Chargement de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Styles personnalisés pour une meilleure esthétique */
+        .btn {
+            @apply px-4 py-2 font-semibold text-white transition-all duration-200 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-opacity-75 m-1;
+        }
+        .btn-create { @apply bg-green-500 hover:bg-green-600 focus:ring-green-500; }
+        .btn-action { @apply bg-blue-500 hover:bg-blue-600 focus:ring-blue-500; }
+        .btn-danger { @apply bg-red-500 hover:bg-red-600 focus:ring-red-500; }
+        .card { @apply bg-white p-6 rounded-xl shadow-2xl; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-8 font-sans">
+
+    <div class="max-w-4xl mx-auto space-y-8">
+        <header class="text-center">
+            <h1 class="text-4xl font-bold text-gray-800">Simulation de Composants POO</h1>
+            <p class="text-gray-500 mt-2">Interagissez avec les classes Python (Voiture, Moteur, Conducteur) via l'API Flask.</p>
+        </header>
+
+        <!-- Zone de Statut -->
+        <div class="card">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Statut Actuel</h2>
+            <div id="status-display" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                <div id="voiture-status" class="p-3 rounded-lg bg-red-100 text-red-800">Voiture : Non créée</div>
+                <div id="conducteur-status" class="p-3 rounded-lg bg-red-100 text-red-800">Conducteur : Non créé</div>
+                <div id="association-status" class="p-3 rounded-lg bg-red-100 text-red-800">Association : Non établie</div>
+            </div>
+        </div>
+
+        <!-- Zone d'Actions -->
+        <div class="card">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Actions</h2>
+            
+            <!-- Création et Association -->
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-gray-600 mb-2">1. Initialisation (Composition & Agrégation)</h3>
+                <button class="btn btn-create" onclick="callApi('/creer-voiture', 'Création de la voiture...')">Créer Voiture</button>
+                <button class="btn btn-create" onclick="callApi('/creer-conducteur', 'Création du conducteur...')">Créer Conducteur</button>
+                <button class="btn btn-action" onclick="callApi('/associer-conducteur', 'Association en cours...')">Associer Conducteur</button>
+            </div>
+
+            <!-- Mouvement et Contrôle -->
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-gray-600 mb-2">2. Contrôle de la Voiture</h3>
+                <button class="btn btn-action" onclick="callApi('/demarrer', 'Tentative de démarrage...')">Démarrer Moteur</button>
+                <button class="btn btn-action" onclick="callApi('/accelerer', 'Accélération...')">Accélérer (Roue tourne)</button>
+                <button class="btn btn-action" onclick="callApi('/freiner', 'Freinage...')">Freiner</button>
+                <button class="btn btn-danger" onclick="callApi('/arreter', 'Arrêt du moteur...')">Arrêter Moteur</button>
+            </div>
+            
+            <!-- Dissociation -->
+            <div>
+                <h3 class="text-lg font-medium text-gray-600 mb-2">3. Retrait (Agrégation inverse)</h3>
+                <button class="btn btn-danger" onclick="callApi('/retirer-conducteur', 'Le conducteur quitte la voiture...')">Retirer Conducteur</button>
+            </div>
+        </div>
+
+        <!-- Zone de Console/Résultat -->
+        <div class="card">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Console des Résultats</h2>
+            <div id="console-output" class="bg-gray-800 text-gray-100 p-4 rounded-lg h-64 overflow-y-scroll text-sm font-mono">
+                <!-- Les messages de l'API s'afficheront ici -->
+                <p>Prêt à interagir avec l'API Flask...</p>
+            </div>
+        </div>
+        
+    </div>
+
+    <script>
+        // ***********************************************************************************
+        // CORRECTION POUR CODESPACES : Utilisation de l'URL publique du port 5000 (Flask)
+        // L'URL de votre API est désormais fixée pour que le front-end puisse la joindre.
+        // ***********************************************************************************
+        const API_BASE_URL = 'https://ubiquitous-space-succotash-v69prw5vgxgxf69g5-5000.app.codespaces.io'; 
+        
+        const consoleOutput = document.getElementById('console-output');
+
+        // Fonction d'utilité pour logger les messages
+        function logMessage(text, isError = false) {
+            const p = document.createElement('p');
+            const timestamp = new Date().toLocaleTimeString('fr-FR');
+            p.innerHTML = `<span class="${isError ? 'text-red-400' : 'text-green-400'}">[${timestamp}]</span> ${text}`;
+            consoleOutput.prepend(p); // Ajouter en haut
+            if (consoleOutput.children.length > 50) {
+                consoleOutput.removeChild(consoleOutput.lastChild); // Limite la taille de la console
+            }
+        }
+
+        // Fonction d'appel générique à l'API
+        async function callApi(endpoint, loadingMessage) {
+            logMessage(`Action : ${loadingMessage}`, false);
+            const url = API_BASE_URL + endpoint;
+
+            try {
+                const response = await fetch(url);
+                
+                // On vérifie le statut avant de tenter de lire le JSON
+                if (response.status === 404) {
+                    throw new Error(`Route non trouvée : ${endpoint}`);
+                }
+                
+                // Vérifier si la réponse est vide (pour les erreurs non-JSON)
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    // Si ce n'est pas du JSON, on utilise le texte brut
+                    data = { message: `Réponse non-JSON du serveur : ${text.substring(0, 100)}...` };
+                }
+
+
+                if (response.ok) {
+                    logMessage(`✅ SUCCÈS - ${endpoint}: ${data.message || data.details || 'Action réussie'}`);
+                } else {
+                    logMessage(`❌ ERREUR - ${endpoint}: ${data.message || data.erreur || 'Erreur inconnue de l\'API'}`, true);
+                }
+            } catch (error) {
+                logMessage(`🛑 ERREUR DE CONNEXION : Impossible de joindre l'API Flask sur ${API_BASE_URL}. Veuillez vérifier que 'app.py' est en cours d'exécution ET que l'URL API_BASE_URL est correcte pour votre environnement Codespaces. Erreur détaillée : ${error.message}`, true);
+            }
+
+            // Rafraîchir le statut après chaque action
+            refreshStatus();
+        }
+
+        // Fonction de rafraîchissement du statut
+        async function refreshStatus() {
+            const statusUrl = API_BASE_URL + '/status';
+            
+            try {
+                const response = await fetch(statusUrl);
+                if (!response.ok) throw new Error("API non disponible (vérifiez le terminal Flask)");
+                const status = await response.json();
+
+                // Mise à jour de l'état de la Voiture
+                const voitureEl = document.getElementById('voiture-status');
+                if (status.voiture_existe) {
+                    voitureEl.className = 'p-3 rounded-lg bg-green-100 text-green-800';
+                    voitureEl.textContent = 'Voiture : Créée (Renault Clio)';
+                } else {
+                    voitureEl.className = 'p-3 rounded-lg bg-red-100 text-red-800';
+                    voitureEl.textContent = 'Voiture : Non créée';
+                }
+
+                // Mise à jour de l'état du Conducteur
+                const conducteurEl = document.getElementById('conducteur-status');
+                if (status.conducteur_existe) {
+                    conducteurEl.className = 'p-3 rounded-lg bg-green-100 text-green-800';
+                    conducteurEl.textContent = 'Conducteur : Créé (Marie)';
+                } else {
+                    conducteurEl.className = 'p-3 rounded-lg bg-red-100 text-red-800';
+                    conducteurEl.textContent = 'Conducteur : Non créé';
+                }
+                
+                // Mise à jour de l'état de l'Association
+                const associationEl = document.getElementById('association-status');
+                if (status.conducteur_dans_voiture) {
+                    associationEl.className = 'p-3 rounded-lg bg-blue-100 text-blue-800 font-bold';
+                    associationEl.textContent = 'Association : Établie (Prêt à rouler)';
+                } else if (status.voiture_existe && status.conducteur_existe) {
+                    associationEl.className = 'p-3 rounded-lg bg-yellow-100 text-yellow-800';
+                    associationEl.textContent = 'Association : Possible (Conducteur à l\'extérieur)';
+                } else {
+                    associationEl.className = 'p-3 rounded-lg bg-red-100 text-red-800';
+                    associationEl.textContent = 'Association : Non établie';
+                }
+
+            } catch (error) {
+                logMessage(`Erreur lors de la récupération du statut : ${error.message}.`, true);
+                // Réinitialiser les indicateurs en cas d'échec de connexion
+                document.getElementById('voiture-status').className = 'p-3 rounded-lg bg-gray-300 text-gray-800';
+                document.getElementById('conducteur-status').className = 'p-3 rounded-lg bg-gray-300 text-gray-800';
+                document.getElementById('association-status').className = 'p-3 rounded-lg bg-gray-300 text-gray-800';
+                document.getElementById('voiture-status').textContent = 'Voiture : API Inaccessible';
+                document.getElementById('conducteur-status').textContent = 'Conducteur : API Inaccessible';
+                document.getElementById('association-status').textContent = 'Association : API Inaccessible';
+            }
+        }
+
+        // Initialisation : Rafraîchir le statut au chargement de la page
+        window.onload = refreshStatus;
+    </script>
+</body>
+</html>
